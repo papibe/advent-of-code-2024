@@ -9,42 +9,20 @@ def parse(filename: str) -> str:
 
 
 def solve(data: str) -> int:
-    # regular expressions
-    re_mul: str = r"mul\((\d+),(\d+)\)"
-    re_do: str = r"do\(\)"
-    re_dont: str = "don't\(\)"
-
-    # list of matches and its indices
-    muls = [
-        (match.start(), match.group(1), match.group(2))
-        for match in re.finditer(re_mul, data, re.DOTALL)
-    ]
-    dos = [
-        (match.start(), match.group()) for match in re.finditer(re_do, data, re.DOTALL)
-    ]
-    donts = [
-        (match.start(), match.group())
-        for match in re.finditer(re_dont, data, re.DOTALL)
-    ]
-
-    all_matches = muls + dos + donts
-    all_matches.sort()
+    regex: str = r"mul\((\d+),(\d+)\)|do\(\)|don't\(\)"
 
     total_sum: int = 0
     enable: bool = True
 
-    for match in all_matches:
-        # multiplication
-        if len(match) == 3 and enable:
-            total_sum += int(match[1]) * int(match[2])
-
-        # dont match
-        elif match[1] == "don't()":
+    for match in re.finditer(regex, data, re.DOTALL):
+        if match.group(0) == "don't()":
             enable = False
 
-        # do match
-        elif match[1] == "do()":
+        elif match.group(0) == "do()":
             enable = True
+
+        elif enable:
+            total_sum += int(match.group(1)) * int(match.group(2))
 
     return total_sum
 
