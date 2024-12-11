@@ -2,6 +2,7 @@ import re
 from collections import deque, defaultdict
 from dataclasses import dataclass
 from typing import Deque, Dict, List, Match, Optional, Set, Tuple
+from copy import deepcopy
 
 
 def parse(filename: str) -> List[str]:
@@ -31,9 +32,11 @@ def solve(data: List[str]) -> int:
             if trail == 0:
                 trailheads.append((row, col))
 
-    print(trailheads)
+    # print(trailheads)
 
+    score = 0
     rating: int = 0
+
     for trailhead in trailheads:
         # BFS init
         visited = set()
@@ -42,12 +45,11 @@ def solve(data: List[str]) -> int:
 
         paths = []
 
-        score = 0
 
         # BFS
         while queue:
             trailhead, visited = queue.popleft()
-            print(f"{trailhead = }, {visited = }")
+            # print(f"{trailhead = }, {visited = }")
             slope = data[trailhead[0]][trailhead[1]]
             if slope == 9:
                 score += 1
@@ -61,12 +63,15 @@ def solve(data: List[str]) -> int:
                 if 0 <= new_row < len(data) and 0 <= new_col < len(data[0]):
                     new_slope = data[new_row][new_col]
                     if new_slope == slope + 1 and (new_row, new_col) not in visited:
-                        visited.add((new_row, new_col))
-                        queue.append(((new_row, new_col), visited))
+                        # new_visited = visited.copy()
+                        new_visited = deepcopy(visited)
+                        new_visited.add((new_row, new_col))
+                        queue.append(((new_row, new_col), new_visited))
 
-        print(f"{score = }")
-        print(f"{len(paths) = }")
+        # print(f"{len(paths) = }")
         rating += len(paths)
+
+    print(f"{score = }")
 
     return rating
 
@@ -78,5 +83,5 @@ def solution(filename: str) -> int:
 
 if __name__ == "__main__":
     print(solution("./example2.txt"))  # 0
-    # print(solution("./example.txt"))  # 0
-    # print(solution("./input.txt"))  # 0
+    print(solution("./example.txt"))  # 0
+    print(solution("./input.txt"))  # 0
