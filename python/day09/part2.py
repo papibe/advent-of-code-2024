@@ -75,5 +75,5 @@ def solution(filename: str) -> int:
 
 
 if __name__ == "__main__":
-    print(solution("./example1.txt"))  # 2858
+    print(solution("./example.txt"))  # 2858
     print(solution("./input.txt"))  # 6362722604045
