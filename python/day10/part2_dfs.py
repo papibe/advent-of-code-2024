@@ -1,103 +1,72 @@
-import re
-from collections import deque, defaultdict
-from dataclasses import dataclass
-from typing import Deque, Dict, List, Match, Optional, Set, Tuple
+from collections import namedtuple
+from typing import List, Set
+
+Point = namedtuple("Point", ["row", "col"])
+Map = List[List[int]]
 
 
-def parse(filename: str) -> List[str]:
+def parse(filename: str) -> Map:
     with open(filename, "r") as fp:
         data: List[str] = fp.read().splitlines()
 
-    map_ = []
+    topop_map = []
     for line in data:
-        row = [int(char) for char in line]
-        map_.append(row)
+        row: List[int] = []
+        for char in line:
+            if char.isnumeric():
+                row.append(int(char))
+            else:
+                row.append(-1)
+        topop_map.append(row)
 
-    # print(map_)
-
-    return map_
+    return topop_map
 
 
-def solve(data: List[str]) -> int:
+def solve(topo_map: Map) -> int:
     # get trailheads:
-    trailheads = []
-    for row, line in enumerate(data):
+    trailheads: List[Point] = []
+    for row, line in enumerate(topo_map):
         for col, trail in enumerate(line):
             if trail == 0:
-                trailheads.append((row, col))
-
-
+                trailheads.append(Point(row, col))
 
     rating: int = 0
+
     for trailhead in trailheads:
-        # BFS init
 
-        # queue = deque([(trailhead, visited)])
-        # paths = set()
-
-        def dfs(trailhead, visited) -> int:
-            slope = data[trailhead[0]][trailhead[1]]
+        def dfs(trailhead: Point, visited: Set[Point]) -> int:
+            slope: int = topo_map[trailhead.row][trailhead.col]
 
             if slope == 9:
-                # paths.add(frozenset(visited))
                 return 1
 
-            local_rating = 0
+            trail_rating: int = 0
             for step_row, step_col in [(0, 1), (0, -1), (1, 0), (-1, 0)]:
-                new_row = trailhead[0] + step_row
-                new_col = trailhead[1] + step_col
+                new_row: int = trailhead.row + step_row
+                new_col: int = trailhead.col + step_col
 
-                # print((new_row, new_col))
-                if 0 <= new_row < len(data) and 0 <= new_col < len(data[0]):
-
-                    new_slope = data[new_row][new_col]
+                if 0 <= new_row < len(topo_map) and 0 <= new_col < len(topo_map[0]):
+                    new_slope: int = topo_map[new_row][new_col]
 
                     if new_slope == slope + 1 and (new_row, new_col) not in visited:
-                        # print("---")
-                        visited.add((new_row, new_col))
-                        local_rating += dfs((new_row, new_col), visited)
+                        visited.add(Point(new_row, new_col))
+                        trail_rating += dfs(Point(new_row, new_col), visited)
+                        visited.remove(Point(new_row, new_col))
 
-                        visited.remove((new_row, new_col))
+            return trail_rating
 
-            return local_rating
-
-        visited = set()
-        visited.add(trailhead)
-
-        r = dfs(trailhead, visited)
-        # print(trailhead, r)
-        rating += r
-
-        # # BFS
-        # while queue:
-        #     trailhead, visited = queue.popleft()
-        #     # print(f"{trailhead = }, {visited = }")
-        #     slope = data[trailhead[0]][trailhead[1]]
-        #     if slope == 9:
-        #         paths.add(frozenset(visited))
-        #         continue
-
-        #     for step_row, step_col in [(0, 1), (0, -1), (1, 0), (-1, 0)]:
-        #         new_row = trailhead[0] + step_row
-        #         new_col = trailhead[1] + step_col
-
-        #         if 0 <= new_row < len(data) and 0 <= new_col < len(data[0]):
-        #             new_slope = data[new_row][new_col]
-        #             if new_slope == slope + 1 and (new_row, new_col) not in visited:
-        #                 visited.add((new_row, new_col))
-        #                 queue.append(((new_row, new_col), visited))
-
-        # print(f"{len(paths) = }")
-        # rating += len(paths)
+        visited: Set[Point] = set([trailhead])
+        rating += dfs(trailhead, visited)
 
     return rating
 
 
 def solution(filename: str) -> int:
-    data: List[str] = parse(filename)
+    data: Map = parse(filename)
     return solve(data)
 
 
 if __name__ == "__main__":
-    # print(solution("./example.txt"))  # 0
-    print(solution("./input.txt"))  # 0
+    print(solution("./example2.txt"))  # 13
+    print(solution("./example.txt"))  # 81
+    print(solution("./input.txt"))  # 1380

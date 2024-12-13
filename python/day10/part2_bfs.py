@@ -1,87 +1,78 @@
-import re
-from collections import deque, defaultdict
-from dataclasses import dataclass
-from typing import Deque, Dict, List, Match, Optional, Set, Tuple
+from collections import deque, namedtuple
 from copy import deepcopy
+from typing import Deque, FrozenSet, List, Set, Tuple
+
+Point = namedtuple("Point", ["row", "col"])
+Map = List[List[int]]
 
 
-def parse(filename: str) -> List[str]:
+def parse(filename: str) -> Map:
     with open(filename, "r") as fp:
         data: List[str] = fp.read().splitlines()
 
-    map_ = []
+    topop_map = []
     for line in data:
-        row = []
+        row: List[int] = []
         for char in line:
             if char.isnumeric():
                 row.append(int(char))
             else:
                 row.append(-1)
-        map_.append(row)
+        topop_map.append(row)
 
-    # print(map_)
-
-    return map_
+    return topop_map
 
 
-def solve(data: List[str]) -> int:
+def solve(topo_map: Map) -> int:
     # get trailheads:
-    trailheads = []
-    for row, line in enumerate(data):
+    trailheads: List[Point] = []
+    for row, line in enumerate(topo_map):
         for col, trail in enumerate(line):
             if trail == 0:
-                trailheads.append((row, col))
+                trailheads.append(Point(row, col))
 
-    # print(trailheads)
-
-    score = 0
+    score: int = 0
     rating: int = 0
 
     for trailhead in trailheads:
         # BFS init
-        visited = set()
-        visited.add(trailhead)
-        queue = deque([(trailhead, visited)])
+        visited: Set[Point] = set([trailhead])
+        queue: Deque[Tuple[Point, Set[Point]]] = deque([(trailhead, visited)])
 
-        paths = []
-
+        paths: Set[FrozenSet[Point]] = set()
 
         # BFS
         while queue:
             trailhead, visited = queue.popleft()
-            # print(f"{trailhead = }, {visited = }")
-            slope = data[trailhead[0]][trailhead[1]]
+            slope: int = topo_map[trailhead.row][trailhead.col]
+
             if slope == 9:
                 score += 1
-                paths.append(frozenset(visited))
+                paths.add(frozenset(visited))
                 continue
 
             for step_row, step_col in [(0, 1), (0, -1), (1, 0), (-1, 0)]:
-                new_row = trailhead[0] + step_row
-                new_col = trailhead[1] + step_col
+                new_row: int = trailhead.row + step_row
+                new_col: int = trailhead.col + step_col
 
-                if 0 <= new_row < len(data) and 0 <= new_col < len(data[0]):
-                    new_slope = data[new_row][new_col]
+                if 0 <= new_row < len(topo_map) and 0 <= new_col < len(topo_map[0]):
+                    new_slope: int = topo_map[new_row][new_col]
                     if new_slope == slope + 1 and (new_row, new_col) not in visited:
-                        # new_visited = visited.copy()
-                        new_visited = deepcopy(visited)
-                        new_visited.add((new_row, new_col))
-                        queue.append(((new_row, new_col), new_visited))
+                        new_visited: Set[Point] = deepcopy(visited)
+                        new_visited.add(Point(new_row, new_col))
+                        queue.append((Point(new_row, new_col), new_visited))
 
-        # print(f"{len(paths) = }")
         rating += len(paths)
-
-    print(f"{score = }")
 
     return rating
 
 
 def solution(filename: str) -> int:
-    data: List[str] = parse(filename)
-    return solve(data)
+    topo_map: Map = parse(filename)
+    return solve(topo_map)
 
 
 if __name__ == "__main__":
-    print(solution("./example2.txt"))  # 0
-    print(solution("./example.txt"))  # 0
-    print(solution("./input.txt"))  # 0
+    print(solution("./example2.txt"))  # 13
+    print(solution("./example.txt"))  # 81
+    print(solution("./input.txt"))  # 1380
