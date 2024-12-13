@@ -3,8 +3,11 @@ from typing import Deque, List, Set
 
 Garden = List[str]
 Point = namedtuple("Point", ["row", "col"])
+Direction = Point
 Region = Set[Point]
 Regions = List[Region]
+Edge = namedtuple("Edge", ["point", "direction"])
+Edges = List[Edge]
 
 
 def parse(filename: str) -> Garden:
@@ -56,25 +59,63 @@ def get_regions(garden: Garden) -> Regions:
     return regions
 
 
-def get_perimeter(members: Region) -> int:
-    """get perimeter of a region"""
-    perimeter: int = 0
+def find(i: int, parent: List[int]) -> int:
+    """find for union/find/disjoint-sets"""
+    if parent[i] == i:
+        return i
 
+    return find(parent[i], parent)
+
+
+def union(i: int, j: int, parent: List[int]) -> None:
+    """union for union/find/disjoint-sets"""
+    i_root = find(i, parent)
+    j_root = find(j, parent)
+    parent[i_root] = j_root
+
+
+def are_neighbors(edge1: Point, edge2: Point) -> bool:
+    """determine if to edges (points) are neighbors"""
+    (row1, col1) = edge1
+    (row2, col2) = edge2
+    for step_row, step_col in [(0, 1), (0, -1), (1, 0), (-1, 0)]:
+        new_row = row1 + step_row
+        new_col = col1 + step_col
+        if (new_row, new_col) == (row2, col2):
+            return True
+
+    return False
+
+
+def get_sides(members: Region) -> int:
+    """get sides of a region"""
+    edges: Edges = []
     for member in members:
-        individual_perimeter: int = 4
         row, col = member
-        for new_row, new_col in [
-            (row, col + 1),
-            (row, col - 1),
-            (row + 1, col),
-            (row - 1, col),
-        ]:
-            if (new_row, new_col) in members:
-                individual_perimeter -= 1
 
-        perimeter += individual_perimeter
+        for step_row, step_col in [(0, 1), (0, -1), (1, 0), (-1, 0)]:
+            new_row = row + step_row
+            new_col = col + step_col
+            if (new_row, new_col) not in members:
+                edges.append(Edge(Point(row, col), Direction(step_row, step_col)))
 
-    return perimeter
+    # create relationships for a union/find algo
+    parent = list(range(len(edges)))
+
+    for i in range(len(parent)):
+        for j in range(i + 1, len(parent)):
+            if (
+                are_neighbors(edges[i].point, edges[j].point)
+                and edges[i].direction == edges[j].direction
+            ):
+                union(i, j, parent)
+
+    # get disjoing sets, or sides
+    sides: Set[int] = set()
+    for i in parent:
+        sides.add(find(i, parent))
+
+    return len(sides)
 
 
 def solve(garden: Garden) -> int:
@@ -82,7 +123,7 @@ def solve(garden: Garden) -> int:
 
     fence_cost: int = 0
     for members in regions:
-        fence_cost += get_perimeter(members) * len(members)
+        fence_cost += get_sides(members) * len(members)
 
     return fence_cost
 
@@ -93,4 +134,4 @@ def solution(filename: str) -> int:
 
 
 if __name__ == "__main__":
-    print(solution("./input.txt"))  # 1485656
+    print(solution("./input.txt"))  # 899196
