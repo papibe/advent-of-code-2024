@@ -1,0 +1,19 @@
+# obtain from parse_program.py
+BST a
+BXL 1
+CDV b
+ADV 3
+BXL 4
+BXC
+OUT b
+JNZ 0
+
+# translated into code
+b = a % 8
+b = b ^ 1
+c = a >> b
+a = a >> 3
+b = b ^ 4
+b = b ^ c
+print(b % 8)
+if a != 0: restart
