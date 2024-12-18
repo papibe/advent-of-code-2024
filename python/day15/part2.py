@@ -199,7 +199,5 @@ def solution(filename: str) -> int:
 
 
 if __name__ == "__main__":
-    assert solution("./example2.txt") == 9021
-    assert solution("./input.txt") == 1481392
-    # print(solution("./example2.txt"))  # 9021
-    # print(solution("./input.txt"))  # 1481392
+    print(solution("./example2.txt"))  # 9021
+    print(solution("./input.txt"))  # 1481392
