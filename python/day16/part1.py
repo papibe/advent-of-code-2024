@@ -1,76 +1,79 @@
-import re
-from collections import deque, defaultdict
-from dataclasses import dataclass
-from typing import Deque, Dict, List, Match, Optional, Set, Tuple
+from collections import deque
+from typing import Deque, List, Tuple
+
+START: str = "S"
+END: str = "E"
+WALL: str = "#"
 
 
-def parse(filename: str) -> List[str]:
+def parse(filename: str) -> Tuple[List[str], int, int, int, int]:
     with open(filename, "r") as fp:
-        data: List[str] = fp.read().splitlines()
-    return data
-
-
-def solve(grid: List[str]) -> int:
-
-    costs = []
-    for _ in range(len(grid)):
-        costs.append([float("inf") for _ in range(len(grid[0]))])
-
-    # print(len(costs), len(costs[0]))
+        grid: List[str] = fp.read().splitlines()
 
     start_row: int
     start_col: int
     end_row: int
     end_col: int
+
     # find start and end
     for row, line in enumerate(grid):
         for col, cell in enumerate(line):
-            if cell == "S":
+            if cell == START:
                 start_row = row
                 start_col = col
-            elif cell == "E":
+            elif cell == END:
                 end_row = row
                 end_col = col
 
-    # print(start_row, start_col, end_row, end_col)
+    return grid, start_row, start_col, end_row, end_col
 
-    queue = deque([(start_row, start_col, 0, 1,0)])
-    visited = set([(start_row, start_col)])
 
+def solve(
+    grid: List[str], start_row: int, start_col: int, end_row: int, end_col: int
+) -> int:
+    # setup costs for dijkstra
+    costs: List[List[int]] = []
+    for _ in range(len(grid)):
+        costs.append([float("inf") for _ in range(len(grid[0]))])  # type: ignore
+
+    queue: Deque[Tuple[int, int, int, int, int]] = deque(
+        [(start_row, start_col, 0, 1, 0)]
+    )
+
+    # Dijkstra
     while queue:
         row, col, dir_row, dir_col, cost = queue.popleft()
-        # if row == end_row and col == end_col:
-        #     return cost
 
-        for row_step, col_step in [(dir_row, dir_col), (dir_col, -dir_row), (-dir_col, dir_row)]:
-            new_row = row + row_step
-            new_col = col + col_step
-            # print(f"{new_row = }, {new_col =}")
+        for row_step, col_step in [
+            (dir_row, dir_col),
+            (dir_col, -dir_row),
+            (-dir_col, dir_row),
+        ]:
+            new_row: int = row + row_step
+            new_col: int = col + col_step
 
-            if grid[new_row][new_col] == "#":
+            if grid[new_row][new_col] == WALL:
                 continue
 
+            new_cost: int
             if (row_step, col_step) == (dir_row, dir_col):
-                added_cost = 1
+                new_cost = cost + 1
             else:
-                added_cost = 1001
-
-            new_cost = cost + added_cost
+                new_cost = cost + 1001
 
             if new_cost < costs[new_row][new_col]:
                 costs[new_row][new_col] = new_cost
                 queue.append((new_row, new_col, row_step, col_step, new_cost))
 
-
     return costs[end_row][end_col]
 
 
 def solution(filename: str) -> int:
-    data: List[str] = parse(filename)
-    return solve(data)
+    grid, start_row, start_col, end_row, end_col = parse(filename)
+    return solve(grid, start_row, start_col, end_row, end_col)
 
 
 if __name__ == "__main__":
-    print(solution("./example1.txt"))    # 0
-    print(solution("./example2.txt"))    # 0
-    print(solution("./input.txt"))  # 0
+    print(solution("./example1.txt"))  # 7036
+    print(solution("./example2.txt"))  # 11048
+    print(solution("./input.txt"))  # 102488
