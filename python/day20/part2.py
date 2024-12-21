@@ -143,12 +143,13 @@ def solve(
 
     for (row, col) in path1:
         # cheat from here
-        cheat_locations = get_radius(grid, row, col, 2)
+        cheat_locations = get_radius(grid, row, col, 20)
         for cl_row, cl_col in cheat_locations:
             # print(distances[row][col], distances[cl_row][cl_col])
             total_distance = d_to_start[row][col] + d_to_end[cl_row][cl_col]
             # total_distance = d_to_end[row][col] + d_to_start[cl_row][cl_col]
-            if min_distance - total_distance <= required_saves:
+            d = abs(row - cl_row) + abs(col - cl_col)
+            if min_distance - (total_distance + d) >= required_saves:
                 counter += 1
 
         # print("trying to cheat at", (row, col), len(cheat_locations))
