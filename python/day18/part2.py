@@ -1,62 +1,49 @@
-import re
-from collections import deque, defaultdict, namedtuple
-from dataclasses import dataclass
-from typing import Deque, Dict, List, Match, Optional, Set, Tuple
+from collections import deque, namedtuple
+from typing import Deque, List, Set, Tuple
 
 Byte = namedtuple("Byte", ["x", "y"])
 
 
-def parse(filename: str, fallen) -> List[str]:
+def parse(filename: str, fallen: int) -> Tuple[Set[Byte], Deque[Byte]]:
     with open(filename, "r") as fp:
         data: List[str] = fp.read().splitlines()
 
-    fbytes = set()
+    fbytes: Set[Byte] = set()
     for index, line in enumerate(data):
         if index >= fallen:
             break
         numbers = line.split(",")
         fbytes.add(Byte(int(numbers[0]), int(numbers[1])))
 
-    rbytes = deque([])
+    rbytes: Deque[Byte] = deque([])
     for index, line in enumerate(data):
         if index < fallen:
             continue
         numbers = line.split(",")
         rbytes.append(Byte(int(numbers[0]), int(numbers[1])))
 
-    # print(len(fbytes), len(rbytes))
-
-    # print(fbytes)
-
     return fbytes, rbytes
 
 
-def fall(fbytes, size):
-    new_fbytes = set()
-    for fbyte in fbytes:
-        if fbyte.y + 1 <= size:
-            new_fbytes.add(Byte(fbyte.x, fbyte.y + 1))
-    return new_fbytes
-
-
-def run(fbytes: List[str], rbytes, size: int) -> int:
-
-    row = 0
-    col = 0
-    queue = deque([(row, col, 0)])
-    visited = set([(row, col)])
+def run(fbytes: Set[Byte], rbytes: Deque[Byte], size: int) -> int:
+    # BFS set up
+    row: int = 0
+    col: int = 0
+    queue: Deque[Tuple[int, int, int]] = deque([(row, col, 0)])
+    visited: Set[Tuple[int, int]] = set([(row, col)])
 
     # BFS
     while queue:
         row, col, steps = queue.popleft()
-        # print(row, col, steps)
         if row == size and col == size:
             return steps
 
-
-
-        for new_row, new_col in [(row, col + 1), (row, col - 1), (row + 1, col),(row - 1 , col)]:
-            # print(f"{new_row = }, {new_col = }")
+        for new_row, new_col in [
+            (row, col + 1),
+            (row, col - 1),
+            (row + 1, col),
+            (row - 1, col),
+        ]:
             if 0 <= new_row <= size and 0 <= new_col <= size:
 
                 if (new_row, new_col) in visited:
@@ -70,19 +57,20 @@ def run(fbytes: List[str], rbytes, size: int) -> int:
 
     return -1
 
-def solve(fbytes: List[str], rbytes, size: int) -> int:
+
+def solve(fbytes: Set[Byte], rbytes: Deque[Byte], size: int) -> str:
     while rbytes:
-        # print(len(rbytes))
-        rbyte = rbytes.popleft()
+        rbyte: Byte = rbytes.popleft()
         fbytes.add(rbyte)
 
-        result = run(fbytes, rbytes, size)
+        result: int = run(fbytes, rbytes, size)
         if result == -1:
-            return rbyte
+            return f"{rbyte.x},{rbyte.y}"
+
+    return ""
 
 
-
-def solution(filename: str, size: int, fallen) -> int:
+def solution(filename: str, size: int, fallen: int) -> str:
     fbytes, rbytes = parse(filename, fallen)
     return solve(fbytes, rbytes, size)
 
