@@ -24,6 +24,7 @@ def get_combo(operand: int, a: int, b: int, c: int) -> str:
 
 
 def parse(a: int, b: int, c: int, program: List[int]) -> None:
+    """Print the numeric program into a human readable list of instructions"""
     pointer: int = 0
 
     while 0 <= pointer < len(program):
