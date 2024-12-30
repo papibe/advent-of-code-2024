@@ -95,5 +95,5 @@ def solution(filename: str) -> int:
 
 
 if __name__ == "__main__":
-    print(solution("./example.txt"))  # 0
-    # print(solution("./input.txt"))  # 0
+    # it takes 3m28s
+    print(solution("./input.txt"))  # 1417
