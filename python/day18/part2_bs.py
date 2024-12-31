@@ -4,33 +4,36 @@ from typing import Deque, List, Set, Tuple
 Byte = namedtuple("Byte", ["x", "y"])
 
 
-def parse(filename: str, fallen: int) -> Tuple[Set[Byte], Deque[Byte]]:
+def parse(filename: str, fallen: int) -> Tuple[Set[Byte], List[Byte]]:
     with open(filename, "r") as fp:
         data: List[str] = fp.read().splitlines()
 
     fbytes: Set[Byte] = set()
-    for index, line in enumerate(data):
-        if index >= fallen:
-            break
-        numbers = line.split(",")
+    for index in range(fallen):
+        line: str = data[index]
+        numbers: List[str] = line.split(",")
         fbytes.add(Byte(int(numbers[0]), int(numbers[1])))
 
-    rbytes: Deque[Byte] = deque([])
-    for index, line in enumerate(data):
-        if index < fallen:
-            continue
+    rbytes: List[Byte] = []
+    for index in range(fallen, len(data)):
+        line = data[index]
         numbers = line.split(",")
         rbytes.append(Byte(int(numbers[0]), int(numbers[1])))
 
     return fbytes, rbytes
 
 
-def run(fbytes: Set[Byte], rbytes: Deque[Byte], size: int) -> int:
+def run(fbytes: Set[Byte], rbytes: List[Byte], index: int, size: int) -> int:
     # BFS set up
     row: int = 0
     col: int = 0
     queue: Deque[Tuple[int, int, int]] = deque([(row, col, 0)])
     visited: Set[Tuple[int, int]] = set([(row, col)])
+
+    # new walls
+    fallen_bytes: Set[Byte] = set()
+    for i in range(index + 1):
+        fallen_bytes.add(rbytes[i])
 
     # BFS
     while queue:
@@ -49,7 +52,7 @@ def run(fbytes: Set[Byte], rbytes: Deque[Byte], size: int) -> int:
                 if (new_row, new_col) in visited:
                     continue
 
-                if (new_row, new_col) in fbytes:
+                if (new_row, new_col) in fbytes or (new_row, new_col) in fallen_bytes:
                     continue
 
                 queue.append((new_row, new_col, steps + 1))
@@ -58,16 +61,20 @@ def run(fbytes: Set[Byte], rbytes: Deque[Byte], size: int) -> int:
     return -1
 
 
-def solve(fbytes: Set[Byte], rbytes: Deque[Byte], size: int) -> str:
-    while rbytes:
-        rbyte: Byte = rbytes.popleft()
-        fbytes.add(rbyte)
+def solve(fbytes: Set[Byte], rbytes: List[Byte], size: int) -> str:
+    lower: int = 0
+    upper: int = len(rbytes) - 1
+    while lower < upper:
+        middle: int = (lower + upper) // 2
+        result: int = run(fbytes, rbytes, middle, size)
 
-        result: int = run(fbytes, rbytes, size)
         if result == -1:
-            return f"{rbyte.x},{rbyte.y}"
+            upper = middle
+        else:
+            lower = middle + 1
 
-    return ""
+    rbyte: Byte = rbytes[lower]
+    return f"{rbyte.x},{rbyte.y}"
 
 
 def solution(filename: str, size: int, fallen: int) -> str:
