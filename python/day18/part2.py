@@ -76,5 +76,5 @@ def solution(filename: str, size: int, fallen: int) -> str:
 
 
 if __name__ == "__main__":
-    print(solution("./example.txt", 6, 12))  # 0
-    print(solution("./input.txt", 70, 1024))  # 0
+    print(solution("./example.txt", 6, 12))  # 6,1
+    print(solution("./input.txt", 70, 1024))  # 16,44
