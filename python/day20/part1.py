@@ -1,25 +1,21 @@
-import re
-from collections import deque, defaultdict
-from dataclasses import dataclass
-from typing import Deque, Dict, List, Match, Optional, Set, Tuple
-
+from collections import deque
+from typing import Deque, List, Set, Tuple
 
 START: str = "S"
 END: str = "E"
 WALL: str = "#"
 SPACE: str = "."
 
+Grid = List[List[str]]
 
-def parse(filename: str) -> Tuple[List[str], int, int, int, int]:
+
+def parse(filename: str) -> Tuple[Grid, int, int, int, int]:
     with open(filename, "r") as fp:
         data: List[str] = fp.read().splitlines()
 
-
-    grid = []
+    grid: Grid = []
     for line in data:
         grid.append([char for char in line])
-
-    # print(grid)
 
     start_row: int
     start_col: int
@@ -27,8 +23,8 @@ def parse(filename: str) -> Tuple[List[str], int, int, int, int]:
     end_col: int
 
     # find start and end
-    for row, line in enumerate(grid):
-        for col, cell in enumerate(line):
+    for row, line_ in enumerate(grid):
+        for col, cell in enumerate(line_):
             if cell == START:
                 start_row = row
                 start_col = col
@@ -38,14 +34,11 @@ def parse(filename: str) -> Tuple[List[str], int, int, int, int]:
 
     return grid, start_row, start_col, end_row, end_col
 
-def run(
-    grid: List[str], start_row: int, start_col: int, end_row: int, end_col: int
-) -> int:
+
+def run(grid: Grid, start_row: int, start_col: int, end_row: int, end_col: int) -> int:
     # BFS setup
-    queue: Deque[Tuple[int, int, int, int, int]] = deque(
-        [(start_row, start_col, 0)]
-    )
-    visited = set([(start_row, start_col)])
+    queue: Deque[Tuple[int, int, int]] = deque([(start_row, start_col, 0)])
+    visited: Set[Tuple[int, int]] = set([(start_row, start_col)])
 
     # BFS
     while queue:
@@ -70,12 +63,13 @@ def run(
                     visited.add((new_row, new_col))
     return -1
 
+
 def solve(
-    grid: List[str], start_row: int, start_col: int, end_row: int, end_col: int
+    grid: Grid, start_row: int, start_col: int, end_row: int, end_col: int
 ) -> int:
-    main_result = run(grid, start_row, start_col, end_row, end_col)
-    # print(f"{main_result}")
-    results = []
+    main_result: int = run(grid, start_row, start_col, end_row, end_col)
+    results: List[int] = []
+
     for row, line in enumerate(grid):
         for col, cell in enumerate(line):
             if cell == WALL:
@@ -83,10 +77,10 @@ def solve(
                 result = run(grid, start_row, start_col, end_row, end_col)
                 grid[row][col] = WALL
 
-                results.append(main_result - result)
-    # print(results)
-    return len([result for result in results if result >= 100])
+                if result != -1:
+                    results.append(main_result - result)
 
+    return len([result for result in results if result >= 100])
 
 
 def solution(filename: str) -> int:
