@@ -133,4 +133,5 @@ def solution(filename: str, required_saves: int) -> int:
 
 
 if __name__ == "__main__":
+    # it takes 290ms
     print(solution("./input.txt", 100))  # 1417
