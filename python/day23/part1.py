@@ -1,13 +1,12 @@
-import re
 from collections import defaultdict
-from typing import List, Tuple
+from typing import DefaultDict, List, Set, Tuple
 
 
-def parse(filename: str) -> str:
+def parse(filename: str) -> DefaultDict[str, List[str]]:
     with open(filename, "r") as fp:
-        data: str = fp.read().splitlines()
+        data: List[str] = fp.read().splitlines()
 
-    graph = defaultdict(list)
+    graph: DefaultDict[str, List[str]] = defaultdict(list)
     for line in data:
         player1, player2 = line.split("-")
         graph[player1].append(player2)
@@ -16,19 +15,19 @@ def parse(filename: str) -> str:
     return graph
 
 
-def solve(graph) -> int:
-    teams = set()
+def solve(graph: DefaultDict[str, List[str]]) -> int:
+    teams: Set[Tuple[str, str, str]] = set()
     for p in graph:
         for q in graph[p]:
             for r in graph[q]:
-                b1 = p in graph[q] and p in graph[r]
-                b2 = q in graph[p] and q in graph[r]
-                b3 = r in graph[p] and r in graph[q]
-                mutual = b1 and b2 and b3
+                b1: bool = p in graph[q] and p in graph[r]
+                b2: bool = q in graph[p] and q in graph[r]
+                b3: bool = r in graph[p] and r in graph[q]
+                mutual: bool = b1 and b2 and b3
 
                 if mutual and p != q and p != r and q != p:
-                    if (p.startswith("t") or q.startswith("t") or r.startswith("t")):
-                        s = tuple(sorted((p, q, r)))
+                    if p.startswith("t") or q.startswith("t") or r.startswith("t"):
+                        s: Tuple[str, str, str] = tuple(sorted((p, q, r)))  # type: ignore
                         teams.add(s)
 
     return len(teams)
@@ -36,7 +35,7 @@ def solve(graph) -> int:
 
 def solution(filename: str) -> int:
 
-    data: str = parse(filename)
+    data: DefaultDict[str, List[str]] = parse(filename)
     return solve(data)
 
 

@@ -1,67 +1,59 @@
-import re
 from collections import defaultdict
-from typing import List, Tuple
+from typing import DefaultDict, List, Set
 
 
-def parse(filename: str) -> str:
+def parse(filename: str) -> DefaultDict[str, List[str]]:
     with open(filename, "r") as fp:
-        data: str = fp.read().splitlines()
+        data: List[str] = fp.read().splitlines()
 
-    graph = defaultdict(set)
+    graph: DefaultDict[str, List[str]] = defaultdict(list)
     for line in data:
         player1, player2 = line.split("-")
-        graph[player1].add(player2)
-        graph[player2].add(player1)
+        graph[player1].append(player2)
+        graph[player2].append(player1)
 
     return graph
 
 
-def bors_kerbosch_v1(R, P, X, G, C):
-
-    if len(P) == 0 and len(X) == 0:
-        if len(R) > 2:
-            C.append(sorted(R))
-        return 
-    
-    for v in P.union(set([])):
-        bors_kerbosch_v1(R.union(set([v])), P.intersection(G[v]), X.intersection(G[v]), G, C)
-        P.remove(v)
-        X.add(v)
-
-
-def bors_kerbosch_v2(R, P, X, G, C):
+def bors_kerbosch_v2(
+    R: Set[str],
+    P: Set[str],
+    X: Set[str],
+    G: DefaultDict[str, List[str]],
+    C: List[List[str]],
+) -> None:
 
     if len(P) == 0 and len(X) == 0:
         if len(R) > 0:
-            C.append(sorted(R))            
+            C.append(sorted(R))
         return
 
     (d, pivot) = max([(len(G[v]), v) for v in P.union(X)])
-                     
+
     for v in P.difference(G[pivot]):
-        bors_kerbosch_v2(R.union(set([v])), P.intersection(G[v]), X.intersection(G[v]), G, C)
+        bors_kerbosch_v2(
+            R.union(set([v])), P.intersection(G[v]), X.intersection(G[v]), G, C
+        )
         P.remove(v)
         X.add(v)
 
 
-def solve(graph) -> int:
-    C1 = []
-    G = graph
-    bors_kerbosch_v2(set([]), set(G.keys()), set([]), G, C1)
-    
-    max_len = float("-inf")
-    max_nodes = set()
-    for c in C1:
-        if len(c) > max_len:
-            max_len = len(c)
-            max_nodes = c
+def solve(graph: DefaultDict[str, List[str]]) -> str:
+    cliques: List[List[str]] = []
+    bors_kerbosch_v2(set(), set(graph.keys()), set(), graph, cliques)
 
-    return ",".join(sorted(max_nodes))
+    max_len: int = float("-inf")  # type: ignore
+    max_clique: List[str] = []
+    for clique in cliques:
+        if len(clique) > max_len:
+            max_len = len(clique)
+            max_clique = clique
+
+    return ",".join(sorted(max_clique))
 
 
-def solution(filename: str) -> int:
-
-    data: str = parse(filename)
+def solution(filename: str) -> str:
+    data: DefaultDict[str, List[str]] = parse(filename)
     return solve(data)
 
 
