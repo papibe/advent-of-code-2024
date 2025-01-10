@@ -1,25 +1,24 @@
 import re
-from collections import defaultdict, deque, namedtuple
-import heapq as hq
-from dataclasses import dataclass
-from typing import List, Tuple, Dict, Set
+from collections import namedtuple
+from typing import Dict, List, Tuple
 
+Inputs = Dict[str, int]
 Operation = namedtuple("Operation", ["var1", "oper", "var2", "res"])
 
-def parse(filename: str) -> str:
+
+def parse(filename: str) -> Tuple[Inputs, List[Operation]]:
     with open(filename, "r") as fp:
-        blocks: str = fp.read().split("\n\n")
+        blocks: List[str] = fp.read().split("\n\n")
 
-
-    inputs = {}
+    inputs: Inputs = {}
     for line in blocks[0].splitlines():
         parts = line.split(":")
         var = parts[0]
         value = int(parts[1].strip())
         inputs[var] = value
 
-    regex = r"(\w+) (\w+) (\w+) -> (\w+)"
-    operations = []
+    regex: str = r"(\w+) (\w+) (\w+) -> (\w+)"
+    operations: List[Operation] = []
     for line in blocks[1].splitlines():
         matches = re.match(regex, line)
         assert matches is not None
@@ -29,65 +28,44 @@ def parse(filename: str) -> str:
         res = matches.group(4)
         operations.append(Operation(var1, oper, var2, res))
 
-    # print(operations)
-
     return inputs, operations
 
 
-def solve(inputs, operations) -> int:
-    total_sum: int = 0
-
-    results = {}
+def solve(inputs: Inputs, operations: List[Operation]) -> int:
+    results: Dict[str, int] = {}
     for k, v in inputs.items():
         results[k] = v
-    
-    remops = operations
-    done = []
-    while remops:
-        remops = []
-        for o in operations:
-            if o in done:
+
+    reminding_operations = operations
+    done: List[Operation] = []
+    res: int
+
+    # run through operations
+    while reminding_operations:
+        reminding_operations = []
+        for oper in operations:
+            if oper in done:
                 continue
-            if o.var1 not in results or o.var2 not in results:
-                remops.append(o)
+            if oper.var1 not in results or oper.var2 not in results:
+                reminding_operations.append(oper)
                 continue
-            if o.oper == "AND":
-                r = results[o.var1] & results[o.var2]
-            elif o.oper == "OR":
-                r = results[o.var1] | results[o.var2]
-            elif o.oper == "XOR":
-                r = results[o.var1] ^ results[o.var2]
+            if oper.oper == "AND":
+                res = results[oper.var1] & results[oper.var2]
+            elif oper.oper == "OR":
+                res = results[oper.var1] | results[oper.var2]
+            elif oper.oper == "XOR":
+                res = results[oper.var1] ^ results[oper.var2]
             else:
-                raise RuntimeError("bla")
-            
-            results[o.res] = r
-            done.append(o)
+                raise RuntimeError("operation not supported")
 
-    results = {}
-    for k, v in inputs.items():
-        results[k] = v
+            results[oper.res] = res
+            done.append(oper)
 
-    for o in done:
-        if o.oper == "AND":
-            r = results[o.var1] & results[o.var2]
-        elif o.oper == "OR":
-            r = results[o.var1] | results[o.var2]
-        elif o.oper == "XOR":
-            r = results[o.var1] ^ results[o.var2]
-        else:
-            raise RuntimeError("bla")
-        
-        results[o.res] = r
-
-
-    # print(results)
-    bin_str = deque([])
-    for n in range(100):
-        if f"z{n:02d}" not in results:
-            break
-        bin_str.appendleft(str(results[f"z{n:02d}"]))
-
-    print(bin_str)
+    # build binary string
+    bin_str: List[str] = []
+    for index in reversed(range(50)):
+        if f"z{index:02d}" in results:
+            bin_str.append(str(results[f"z{index:02d}"]))
 
     return int("".join(bin_str), 2)
 
@@ -98,6 +76,6 @@ def solution(filename: str) -> int:
 
 
 if __name__ == "__main__":
-    print(solution("./example.txt"))  #
-    print(solution("./example1.txt"))  #
-    print(solution("./input.txt"))  # 
+    print(solution("./example.txt"))  # 4
+    print(solution("./example1.txt"))  # 2024
+    print(solution("./input.txt"))  # 60614602965288

@@ -5,7 +5,7 @@ import heapq as hq
 from dataclasses import dataclass
 from typing import List, Tuple, Dict, Set
 
-from topo import topologicalSort
+# from topo import topologicalSort
 
 # Operation = namedtuple("Operation", ["var1", "oper", "var2", "res"])
 @dataclass
@@ -46,7 +46,7 @@ def bin_sum(inputs, operations):
     results = {}
     for k, v in inputs.items():
         results[k] = v
-    
+
     # remops = operations
     done = []
     while True:
@@ -61,14 +61,14 @@ def bin_sum(inputs, operations):
                     r = results[o.var1] ^ results[o.var2]
                 else:
                     raise RuntimeError("bla")
-                
+
                 results[o.res] = r
                 done.append(o)
                 change = True
-        
+
         if not change:
             break
-        
+
 
     # if len(done) != len(operations):
     #     print(f"{len(done) = }, {len(operations) = }")
@@ -82,7 +82,7 @@ def build_adj_list(operations):
         all_symbols_set.add(o.var1)
         all_symbols_set.add(o.var2)
         all_symbols_set.add(o.res)
-    
+
     all_symbols = list(all_symbols_set)
     adj = [[] for _ in range(len(all_symbols))]
     trans = {}
@@ -122,16 +122,16 @@ def test2(x, y, inputs, operations):
     while i < len(x):
         # print(i)
         bsum = x[i] + y[i] + carry
-        res = bsum % 2 
+        res = bsum % 2
         ncarry = 1 if bsum > 1 else 0
         if res != z[i]:
             print(f"fail at {i}, {carry=} {x[i]=}, {y[i]=}, {res=}, {ncarry=}, {z[i]=}")
-            return i, False    
+            return i, False
         carry = ncarry
         i += 1
     if carry == 0:
         return -1, True
-    
+
     if carry == z[i]:
         return i, True
     else:
@@ -148,7 +148,7 @@ def get_dependencies(operations, symbol):
                 if o.var1 not in dependencies:
                     queue.append(o.var1)
                     dependencies.append(o.var1)
-                
+
                 if o.var2 not in dependencies:
                     queue.append(o.var2)
                     dependencies.append(o.var2)
@@ -157,25 +157,25 @@ def get_dependencies(operations, symbol):
 
 def solve(inputs, operations):
     output = []
-    o1 = operations[4]   
+    o1 = operations[4]
     o2 = operations[169]
     output.append(o1.res)
     output.append(o2.res)
     o1.res, o2.res = o2.res, o1.res
 
-    o1 = operations[16]   
+    o1 = operations[16]
     o2 = operations[172]
     output.append(o1.res)
     output.append(o2.res)
     o1.res, o2.res = o2.res, o1.res
 
-    o1 = operations[200]   
+    o1 = operations[200]
     o2 = operations[205]
     output.append(o1.res)
     output.append(o2.res)
     o1.res, o2.res = o2.res, o1.res
 
-    o1 = operations[101]   
+    o1 = operations[101]
     o2 = operations[149]
     output.append(o1.res)
     output.append(o2.res)
@@ -206,7 +206,7 @@ def solve(inputs, operations):
             print(f"y  {y_value:045b}")
             print(f"z {z_value:046b}")
             return False
-    
+
         return True
 
     for i in range(45):
@@ -249,7 +249,7 @@ def solve(inputs, operations):
 
         print(index1, index2)
 
-        o1 = moperations[index1]   
+        o1 = moperations[index1]
         o2 = moperations[index2]
         o1.res, o2.res = o2.res, o1.res
 
@@ -284,22 +284,22 @@ def solve(inputs, operations):
 
             print(index1, index2)
 
-            o1 = operations[index1]   
+            o1 = operations[index1]
             o2 = operations[index2]
             o1.res, o2.res = o2.res, o1.res
 
             i2, ok = test(inputs, operations)
 
-            if ok: 
+            if ok:
                 return o1, o2
             else:
                 if i2 > i:
                     print(f"{i = }")
-                    return o1, o2                    
+                    return o1, o2
             o1.res, o2.res = o2.res, o1.res
 
 
-        
+
 
 def solution(filename: str) -> int:
     inputs, operations = parse(filename)
@@ -309,4 +309,4 @@ def solution(filename: str) -> int:
 if __name__ == "__main__":
     # print(solution("./example.txt"))  #
     # print(solution("./example1.txt"))  #
-    print(solution("./input.txt"))  # 
+    print(solution("./input.txt"))  #
