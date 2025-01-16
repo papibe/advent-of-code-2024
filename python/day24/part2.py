@@ -1,26 +1,26 @@
 import re
-from collections import defaultdict, deque, namedtuple
-from itertools import combinations
-import heapq as hq
+from collections import deque
 from dataclasses import dataclass
-from typing import List, Tuple, Dict, Set
+from itertools import combinations
+from typing import Dict, List, Tuple
 
 # from topo import topologicalSort
+
 
 # Operation = namedtuple("Operation", ["var1", "oper", "var2", "res"])
 @dataclass
 class Operation:
-    var1: int
+    var1: str
     oper: str
-    var2: int
+    var2: str
     res: str
 
-def parse(filename: str) -> str:
+
+def parse(filename: str) -> Tuple[Dict[str, int], List[Operation]]:
     with open(filename, "r") as fp:
-        blocks: str = fp.read().split("\n\n")
+        blocks: List[str] = fp.read().split("\n\n")
 
-
-    inputs = {}
+    inputs: Dict[str, int] = {}
     for line in blocks[0].splitlines():
         parts = line.split(":")
         var = parts[0]
@@ -28,21 +28,24 @@ def parse(filename: str) -> str:
         inputs[var] = value
 
     regex = r"(\w+) (\w+) (\w+) -> (\w+)"
-    operations = []
+    operations: List[Operation] = []
     for line in blocks[1].splitlines():
         matches = re.match(regex, line)
         assert matches is not None
-        var1 = matches.group(1)
-        oper = matches.group(2)
-        var2 = matches.group(3)
-        res = matches.group(4)
+        var1: str = matches.group(1)
+        oper: str = matches.group(2)
+        var2: str = matches.group(3)
+        res: str = matches.group(4)
         operations.append(Operation(var1, oper, var2, res))
 
     # print(operations)
 
     return inputs, operations
 
-def bin_sum(inputs, operations):
+
+def bin_sum(
+    inputs: Dict[str, int], operations: List[Operation]
+) -> Tuple[List[int], bool]:
     results = {}
     for k, v in inputs.items():
         results[k] = v
@@ -69,36 +72,14 @@ def bin_sum(inputs, operations):
         if not change:
             break
 
-
     # if len(done) != len(operations):
     #     print(f"{len(done) = }, {len(operations) = }")
     #     return [], False
     return get_bin(results, "z"), True
 
 
-def build_adj_list(operations):
-    all_symbols_set = set()
-    for i, o in enumerate(operations):
-        all_symbols_set.add(o.var1)
-        all_symbols_set.add(o.var2)
-        all_symbols_set.add(o.res)
-
-    all_symbols = list(all_symbols_set)
-    adj = [[] for _ in range(len(all_symbols))]
-    trans = {}
-    for i, s in enumerate(all_symbols):
-        trans[s] = i
-
-    for o in operations:
-        adj[trans[o.res]].append(trans[o.var1])
-        adj[trans[o.res]].append(trans[o.var2])
-
-    return adj
-
-
-
-def get_bin(inputs, var_name):
-    bin_str = deque([])
+def get_bin(inputs: Dict[str, int], var_name: str) -> List[int]:
+    bin_str = []
     for n in range(100):
         if f"{var_name}{n:02d}" not in inputs:
             break
@@ -107,7 +88,9 @@ def get_bin(inputs, var_name):
     return bin_str
 
 
-def test2(x, y, inputs, operations):
+def test2(
+    x: List[int], y: List[int], inputs: Dict[str, int], operations: List[Operation]
+) -> Tuple[int, bool]:
     # x = get_bin(inputs, "x")
     # y = get_bin(inputs, "y")
     # assert len(x) == len(y)
@@ -138,9 +121,9 @@ def test2(x, y, inputs, operations):
         return i, False
 
 
-def get_dependencies(operations, symbol):
+def get_dependencies(operations: List[Operation], symbol: str) -> List[str]:
     queue = deque([symbol])
-    dependencies = []
+    dependencies: List[str] = []
     while queue:
         symbol = queue.popleft()
         for o in operations:
@@ -155,7 +138,8 @@ def get_dependencies(operations, symbol):
 
     return dependencies
 
-def solve(inputs, operations):
+
+def solve(inputs: Dict[str, int], operations: List[Operation]) -> str:
     output = []
     o1 = operations[4]
     o2 = operations[169]
@@ -182,14 +166,13 @@ def solve(inputs, operations):
     o1.res, o2.res = o2.res, o1.res
 
     output.sort()
-    print(",".join(output))
+    # print(",".join(output))
 
-
-    def to_number(x):
+    def to_number(x: List[int]) -> int:
         rx = [str(n) for n in reversed(x)]
         return int("".join(rx), 2)
 
-    def test(x_value, y_value, operations):
+    def test(x_value: int, y_value: int, operations: List[Operation]) -> bool:
         x = list(reversed([int(s) for s in f"{x_value:045b}"]))
         y = list(reversed([int(s) for s in f"{y_value:045b}"]))
         inputs = {}
@@ -201,7 +184,9 @@ def solve(inputs, operations):
             print("not ok: ")
         z_value = to_number(z)
         if x_value + y_value != z_value:
-            print(f"at {i}: {x_value=}, {y_value=} should be: {x_value+y_value} but is {z_value=}")
+            print(
+                f"at {i}: {x_value=}, {y_value=} should be: {x_value+y_value} but is {z_value=}"
+            )
             print(f"x  {x_value:045b}")
             print(f"y  {y_value:045b}")
             print(f"z {z_value:046b}")
@@ -215,12 +200,12 @@ def solve(inputs, operations):
         test(x_value, 0, operations)
         test(x_value, y_value, operations)
         test(0, y_value, operations)
-        x_value = (1 << i) -1
+        x_value = (1 << i) - 1
         y_value = 1
         test(x_value, y_value, operations)
 
+    return ",".join(output)
 
-    return
     moperations = [
         operations[3],
         operations[20],
@@ -231,12 +216,12 @@ def solve(inputs, operations):
         operations[79],
         operations[87],
         operations[89],
-        operations[101], #
+        operations[101],  #
         operations[106],
         operations[118],
         operations[129],
         operations[138],
-        operations[149], #
+        operations[149],  #
         operations[159],
         operations[174],
         operations[192],
@@ -260,7 +245,7 @@ def solve(inputs, operations):
             a = a and test(x_value, 0, operations)
             a = a and test(x_value, y_value, operations)
             a = a and test(0, y_value, operations)
-            x_value = (1 << i) -1
+            x_value = (1 << i) - 1
             y_value = 1
             a = a and test(x_value, y_value, operations)
 
@@ -269,8 +254,6 @@ def solve(inputs, operations):
             print(f"found {o1}, {o2}")
 
         o1.res, o2.res = o2.res, o1.res
-
-
 
     return 0
     while True:
@@ -299,9 +282,7 @@ def solve(inputs, operations):
             o1.res, o2.res = o2.res, o1.res
 
 
-
-
-def solution(filename: str) -> int:
+def solution(filename: str) -> str:
     inputs, operations = parse(filename)
     return solve(inputs, operations)
 
