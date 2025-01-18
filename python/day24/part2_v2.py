@@ -145,7 +145,9 @@ def test(x_value: int, y_value: int, operations: List[Operation], index: int) ->
     return True
 
 
-def get_error_at_index(operations: List[Operation], min_index: int, max_index: int) -> int:
+def get_error_at_index(
+    operations: List[Operation], min_index: int, max_index: int
+) -> int:
     for i in range(min_index, max_index):
         tests_ok: bool = True
         power_of_2: int = 1 << i
