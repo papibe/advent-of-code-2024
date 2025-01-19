@@ -1,78 +1,71 @@
-import re
-from collections import deque, defaultdict
-from typing import List, Tuple, Dict
+from typing import List, Tuple
+
+Lock = List[str]
+Key = List[str]
+Height = List[int]
 
 
-def parse(filename: str) -> str:
+def parse(filename: str) -> Tuple[List[Lock], List[Key]]:
     with open(filename, "r") as fp:
-        blocks: str = fp.read().split("\n\n")
+        blocks: List[str] = fp.read().split("\n\n")
 
-    locks = []
-    keys = []
+    locks: List[Lock] = []
+    keys: List[Key] = []
+
     for block in blocks:
         if block[0] == "#":
             locks.append(block.splitlines())
         elif block[0] == ".":
             keys.append(block.splitlines())
         else:
-            raise RuntimeError("blah")
-
-    # print(locks)
-    # print(keys)
+            raise RuntimeError("invalid format")
 
     return locks, keys
 
 
-def solve(locks, keys) -> int:
-    total_sum: int = 0
-
-    lock_pins = []
+def solve(locks: List[Lock], keys: List[Key]) -> int:
+    # get lock heights
+    lock_heights: List[Height] = []
     for lock in locks:
-        lock_pin = [-1] * len(lock[0])
+        lock_height = [-1] * len(lock[0])
         for col in range(len(lock[0])):
             for row in range(len(lock)):
-                if lock[row][col] ==  "#":
-                    lock_pin[col] += 1
-        
-        lock_pins.append(lock_pin)
+                if lock[row][col] == "#":
+                    lock_height[col] += 1
 
-    key_pins = []
+        lock_heights.append(lock_height)
+
+    # get pin heights
+    key_heights: List[Height] = []
     for key in keys:
-        key_pin = [-1] * len(key[0])
+        key_height = [-1] * len(key[0])
         for col in range(len(key[0])):
             for row in range(len(key)):
-                if key[row][col] ==  "#":
-                    key_pin[col] += 1
-        
-        key_pins.append(key_pin)
+                if key[row][col] == "#":
+                    key_height[col] += 1
 
+        key_heights.append(key_height)
 
-    # print(lock_pins)
-    # print()
-    # print(key_pins)
-
-
-    counter = 0
-    for key in key_pins:
-        for lock in lock_pins:
-            for col, pin in enumerate(lock):
-                kpin = key[col]
-                lpin = lock[col]
-                if kpin + lpin > 5:
+    # count overall keys and locks fits
+    key_lock_fits: int = 0
+    for key_height in key_heights:
+        for lock_height in lock_heights:
+            for col in range(5):
+                key_pin = key_height[col]
+                lock_pin = lock_height[col]
+                if key_pin + lock_pin > 5:
                     break
             else:
-                counter += 1
+                key_lock_fits += 1
 
-
-    return counter
+    return key_lock_fits
 
 
 def solution(filename: str) -> int:
-
     locks, keys = parse(filename)
     return solve(locks, keys)
 
 
 if __name__ == "__main__":
-    print(solution("./example.txt"))  #
-    print(solution("./input.txt"))  # 
+    print(solution("./example.txt"))  # 3
+    print(solution("./input.txt"))  # 3127
