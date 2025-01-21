@@ -1,13 +1,11 @@
 import re
-from collections import deque
 from dataclasses import dataclass
 from itertools import combinations
-from typing import Dict, List, Tuple
+from typing import Dict, List, Set, Tuple
 
-# from topo import topologicalSort
+ALL_GOOD: int = -1
 
 
-# Operation = namedtuple("Operation", ["var1", "oper", "var2", "res"])
 @dataclass
 class Operation:
     var1: str
@@ -15,11 +13,16 @@ class Operation:
     var2: str
     res: str
 
+    def __hash__(self) -> int:
+        return hash("f{self.var1}-{self.oper}-{self.var2}-{self.res}")
+
 
 def parse(filename: str) -> Tuple[Dict[str, int], List[Operation]]:
+    # divide input into 2 blocks
     with open(filename, "r") as fp:
         blocks: List[str] = fp.read().split("\n\n")
 
+    # parse inputs
     inputs: Dict[str, int] = {}
     for line in blocks[0].splitlines():
         parts = line.split(":")
@@ -27,6 +30,7 @@ def parse(filename: str) -> Tuple[Dict[str, int], List[Operation]]:
         value = int(parts[1].strip())
         inputs[var] = value
 
+    # parse oprations
     regex = r"(\w+) (\w+) (\w+) -> (\w+)"
     operations: List[Operation] = []
     for line in blocks[1].splitlines():
@@ -38,22 +42,18 @@ def parse(filename: str) -> Tuple[Dict[str, int], List[Operation]]:
         res: str = matches.group(4)
         operations.append(Operation(var1, oper, var2, res))
 
-    # print(operations)
-
     return inputs, operations
 
 
 def bin_sum(
     inputs: Dict[str, int], operations: List[Operation]
 ) -> Tuple[List[int], bool]:
-    results = {}
+    results: Dict[str, int] = {}
     for k, v in inputs.items():
         results[k] = v
 
-    # remops = operations
-    done = []
     while True:
-        change = False
+        change: bool = False
         for o in operations:
             if o.var1 in results and o.var2 in results and o.res not in results:
                 if o.oper == "AND":
@@ -63,223 +63,141 @@ def bin_sum(
                 elif o.oper == "XOR":
                     r = results[o.var1] ^ results[o.var2]
                 else:
-                    raise RuntimeError("bla")
+                    raise RuntimeError(f"{o.oper}: operation not supported")
 
                 results[o.res] = r
-                done.append(o)
                 change = True
 
         if not change:
             break
 
-    # if len(done) != len(operations):
-    #     print(f"{len(done) = }, {len(operations) = }")
-    #     return [], False
     return get_bin(results, "z"), True
 
 
 def get_bin(inputs: Dict[str, int], var_name: str) -> List[int]:
-    bin_str = []
+    bin_list: List[int] = []
     for n in range(100):
         if f"{var_name}{n:02d}" not in inputs:
             break
-        # bin_str.appendleft(str(inputs[f"{var_name}{n:02d}"]))
-        bin_str.append(inputs[f"{var_name}{n:02d}"])
-    return bin_str
+        bin_list.append(inputs[f"{var_name}{n:02d}"])
+    return bin_list
 
 
-def test2(
-    x: List[int], y: List[int], inputs: Dict[str, int], operations: List[Operation]
-) -> Tuple[int, bool]:
-    # x = get_bin(inputs, "x")
-    # y = get_bin(inputs, "y")
-    # assert len(x) == len(y)
+def get_moperations(operations: List[Operation], index: int) -> List[Operation]:
+    moperations: Set[Operation] = set()
+
+    initial_results: Set[str] = {
+        f"z{index - 1:02d}",
+        f"z{index:02d}",
+        f"z{index + 1:02d}",
+    }
+
+    for o in operations:
+        if o.res in initial_results:
+            moperations.add(o)
+
+    vars = set()
+    for o in moperations:
+        vars.add(o.var1)
+        vars.add(o.var2)
+
+    for o in operations:
+        if o.var1 in vars or o.var2 in vars or o.res in vars:
+            moperations.add(o)
+
+    for o in moperations:
+        vars.add(o.var1)
+        vars.add(o.var2)
+        vars.add(o.res)
+
+    for o in operations:
+        if o.var1 in vars or o.var2 in vars or o.res in vars:
+            moperations.add(o)
+
+    return list(moperations)
+
+
+def to_number(x: List[int]) -> int:
+    rx: List[str] = [str(n) for n in reversed(x)]
+    return int("".join(rx), 2)
+
+
+def test(x_value: int, y_value: int, operations: List[Operation], index: int) -> bool:
+    x = list(reversed([int(s) for s in f"{x_value:045b}"]))
+    y = list(reversed([int(s) for s in f"{y_value:045b}"]))
+    inputs = {}
+    for idx in range(45):
+        inputs[f"x{idx:02d}"] = x[idx]
+        inputs[f"y{idx:02d}"] = y[idx]
     z, ok = bin_sum(inputs, operations)
     if not ok:
-        return -1, False
-    # print(z)
-    # assert len(x) + 1 == len(z)
+        print("not ok: ")
+    z_value = to_number(z)
+    if x_value + y_value != z_value:
+        # print(
+        #     f"at {index}: {x_value=}, {y_value=} should be: {x_value+y_value} but is {z_value=}"
+        # )
+        # print(f"x  {x_value:045b}")
+        # print(f"y  {y_value:045b}")
+        # print(f"z {z_value:046b}")
+        return False
 
-    i = 0
-    carry = 0
-    while i < len(x):
-        # print(i)
-        bsum = x[i] + y[i] + carry
-        res = bsum % 2
-        ncarry = 1 if bsum > 1 else 0
-        if res != z[i]:
-            print(f"fail at {i}, {carry=} {x[i]=}, {y[i]=}, {res=}, {ncarry=}, {z[i]=}")
-            return i, False
-        carry = ncarry
-        i += 1
-    if carry == 0:
-        return -1, True
-
-    if carry == z[i]:
-        return i, True
-    else:
-        return i, False
+    return True
 
 
-def get_dependencies(operations: List[Operation], symbol: str) -> List[str]:
-    queue = deque([symbol])
-    dependencies: List[str] = []
-    while queue:
-        symbol = queue.popleft()
-        for o in operations:
-            if o.res == symbol:
-                if o.var1 not in dependencies:
-                    queue.append(o.var1)
-                    dependencies.append(o.var1)
+def get_error_at_index(
+    operations: List[Operation], min_index: int, max_index: int
+) -> int:
+    for i in range(min_index, max_index):
+        tests_ok: bool = True
+        power_of_2: int = 1 << i
 
-                if o.var2 not in dependencies:
-                    queue.append(o.var2)
-                    dependencies.append(o.var2)
+        tests_ok = tests_ok and test(power_of_2, 0, operations, i)
+        tests_ok = tests_ok and test(0, power_of_2, operations, i)
+        tests_ok = tests_ok and test(power_of_2, power_of_2, operations, i)
 
-    return dependencies
+        just_ones: int = (1 << i) - 1
+        tests_ok = tests_ok and test(just_ones, 1, operations, i)
+
+        if not (tests_ok):
+            return i
+
+    return -1
 
 
 def solve(inputs: Dict[str, int], operations: List[Operation]) -> str:
-    output = []
-    o1 = operations[4]
-    o2 = operations[169]
-    output.append(o1.res)
-    output.append(o2.res)
-    o1.res, o2.res = o2.res, o1.res
+    output: List[str] = []
 
-    o1 = operations[16]
-    o2 = operations[172]
-    output.append(o1.res)
-    output.append(o2.res)
-    o1.res, o2.res = o2.res, o1.res
+    index: int = get_error_at_index(operations, 0, 45)
+    while index != ALL_GOOD:
+        print(f"Problem detected at index {index}")
 
-    o1 = operations[200]
-    o2 = operations[205]
-    output.append(o1.res)
-    output.append(o2.res)
-    o1.res, o2.res = o2.res, o1.res
+        moperations = get_moperations(operations, index)
+        print(f"Operations considered for swapping: {len(moperations)}")
 
-    o1 = operations[101]
-    o2 = operations[149]
-    output.append(o1.res)
-    output.append(o2.res)
-    o1.res, o2.res = o2.res, o1.res
-
-    output.sort()
-    # print(",".join(output))
-
-    def to_number(x: List[int]) -> int:
-        rx = [str(n) for n in reversed(x)]
-        return int("".join(rx), 2)
-
-    def test(x_value: int, y_value: int, operations: List[Operation]) -> bool:
-        x = list(reversed([int(s) for s in f"{x_value:045b}"]))
-        y = list(reversed([int(s) for s in f"{y_value:045b}"]))
-        inputs = {}
-        for idx in range(45):
-            inputs[f"x{idx:02d}"] = x[idx]
-            inputs[f"y{idx:02d}"] = y[idx]
-        z, ok = bin_sum(inputs, operations)
-        if not ok:
-            print("not ok: ")
-        z_value = to_number(z)
-        if x_value + y_value != z_value:
-            print(
-                f"at {i}: {x_value=}, {y_value=} should be: {x_value+y_value} but is {z_value=}"
-            )
-            print(f"x  {x_value:045b}")
-            print(f"y  {y_value:045b}")
-            print(f"z {z_value:046b}")
-            return False
-
-        return True
-
-    for i in range(45):
-        x_value = 1 << i
-        y_value = 1 << i
-        test(x_value, 0, operations)
-        test(x_value, y_value, operations)
-        test(0, y_value, operations)
-        x_value = (1 << i) - 1
-        y_value = 1
-        test(x_value, y_value, operations)
-
-    return ",".join(output)
-
-    moperations = [
-        operations[3],
-        operations[20],
-        operations[34],
-        operations[51],
-        operations[60],
-        operations[68],
-        operations[79],
-        operations[87],
-        operations[89],
-        operations[101],  #
-        operations[106],
-        operations[118],
-        operations[129],
-        operations[138],
-        operations[149],  #
-        operations[159],
-        operations[174],
-        operations[192],
-        operations[213],
-        operations[218],
-    ]
-
-    indexes = list(range(len(moperations)))
-    for index1, index2 in combinations(indexes, 2):
-
-        print(index1, index2)
-
-        o1 = moperations[index1]
-        o2 = moperations[index2]
-        o1.res, o2.res = o2.res, o1.res
-
-        a = True
-        for i in range(34, 45):
-            x_value = 1 << i
-            y_value = 1 << i
-            a = a and test(x_value, 0, operations)
-            a = a and test(x_value, y_value, operations)
-            a = a and test(0, y_value, operations)
-            x_value = (1 << i) - 1
-            y_value = 1
-            a = a and test(x_value, y_value, operations)
-
-        if a:
-            print(f"found {index1}, {index2}")
-            print(f"found {o1}, {o2}")
-
-        o1.res, o2.res = o2.res, o1.res
-
-    return 0
-    while True:
-
-        i, ok = test(inputs, operations)
-        if not ok:
-            print(f"{i = }")
-
-        indexes = list(range(len(operations)))
+        indexes = list(range(len(moperations)))
         for index1, index2 in combinations(indexes, 2):
 
-            print(index1, index2)
-
-            o1 = operations[index1]
-            o2 = operations[index2]
+            # swap operations
+            o1 = moperations[index1]
+            o2 = moperations[index2]
             o1.res, o2.res = o2.res, o1.res
 
-            i2, ok = test(inputs, operations)
+            if get_error_at_index(operations, index - 1, index + 3) == ALL_GOOD:
+                print("fixing by swaping:")
+                print(f"  {o1}")
+                print(f"  {o2}")
+                print()
+                output.append(o1.res)
+                output.append(o2.res)
+                break
 
-            if ok:
-                return o1, o2
-            else:
-                if i2 > i:
-                    print(f"{i = }")
-                    return o1, o2
             o1.res, o2.res = o2.res, o1.res
+
+        index = get_error_at_index(operations, index, 45)
+
+    output.sort()
+    return ",".join(output)
 
 
 def solution(filename: str) -> str:
@@ -288,6 +206,7 @@ def solution(filename: str) -> str:
 
 
 if __name__ == "__main__":
-    # print(solution("./example.txt"))  #
-    # print(solution("./example1.txt"))  #
-    print(solution("./input.txt"))  #
+
+    result = solution("./input.txt")
+    print(result)  #
+    assert result == "cgr,hpc,hwk,qmd,tnt,z06,z31,z37"
