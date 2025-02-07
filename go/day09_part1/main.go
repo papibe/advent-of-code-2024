@@ -25,7 +25,7 @@ func parse(filename string) []string {
 			disk = append(disk, strconv.Itoa(file_id))
 		}
 
-		// files
+		// spaces
 		if index+1 < len(data) {
 			spaces_str := data[index+1]
 			spaces, _ := strconv.Atoi(string(spaces_str))
