@@ -5,8 +5,6 @@ type Point struct {
 	col int
 }
 
-type Map [][]int
-
 // Visited Set
 type VisitedSet struct {
 	visited map[Point]bool

@@ -6,6 +6,8 @@ import (
 	"strings"
 )
 
+type Map [][]int
+
 func parse(filename string) Map {
 	data, err := os.ReadFile(filename)
 
