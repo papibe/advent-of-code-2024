@@ -113,7 +113,7 @@ func run(grid [][]rune, start, end Position) (*DefaultDict[Position, int], []Pos
 func get_radius(grid [][]rune, start Position, cheat_radius int) *Set[Position] {
 	cheat_destinations := NewSet[Position]()
 
-	for row_step := range cheat_radius {
+	for row_step := range cheat_radius + 1 {
 		for col_step := range cheat_radius - row_step + 1 {
 			for _, dir := range []Position{{1, 1}, {-1, 1}, {-1, -1}, {1, -1}} {
 				new_row := start.row + dir.row*row_step
