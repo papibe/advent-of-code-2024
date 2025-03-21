@@ -39,13 +39,6 @@ func pseudo_round(n int) int {
 	return n
 }
 
-// func pseudo_random(n int) int {
-// 	for range 2000 {
-// 		n = pseudo_round(n)
-// 	}
-// 	return n
-// }
-
 func solve(numbers []int) int {
 	buyers := [][]int{}
 	for _, number := range numbers {
