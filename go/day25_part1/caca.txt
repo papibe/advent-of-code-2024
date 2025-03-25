@@ -1,0 +1,34 @@
+electric
+    - for change energy (lock for 3 years)
+    - veteran energy x
+    - terriot x
+
+gas:
+    - at_mos energy, online application
+    - wait for close day
+    - verification email
+
+water:
+    - city Dallas
+    - 2 methods
+        - online
+        - best method call
+
+internet:
+    - ATT transfer
+    - x account number and pin -> Stefanie
+    - new account
+
+security:
+    - ADT: most popular
+    - smart panel 64 a month
+    - installation fee waiver if Green Scene
+
+pest control:
+    -
+
+home warranty:
+    - monthly fee
+
+quote:
+    - for keys
